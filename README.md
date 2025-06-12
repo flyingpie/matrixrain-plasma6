@@ -1,6 +1,6 @@
-# Matrix-style Wawllpaper for KDE Plasma 6
+# Matrix-style Wallpaper for KDE Plasma 6
 
-Provides a Matrix-esque "code rainfall" background for Plasma 6, with some fun custommizations.
+Provides a Matrix-esque "code rainfall" background wallpaper for Plasma 6, with some fun custommizations.
 
 ## Features
 
