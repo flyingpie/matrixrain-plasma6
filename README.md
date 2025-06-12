@@ -17,8 +17,8 @@ package on arch based distros, `kpackagetool6` on Suse based distros, and
 `kf6-kpackage` on debian based distros.
 
 ```bash
-git clone https://github.com/Blacksuan19/plasma-wallpaper-wallhaven-reborn.git
-cd plasma-wallpaper-wallhaven-reborn
+git clone https://github.com/obsidianreq/matrixrain-plasma6.git
+cd matrixrain-plasma6
 kpackagetool6 --type Plasma/Wallpaper --install package/
 ```
 
