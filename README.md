@@ -2,6 +2,8 @@
 
 Provides a Matrix-esque "code rainfall" background wallpaper for Plasma 6, with some fun custommizations.
 
+![screenshot.png](screenshot.png)
+
 ## Features
 
 - Change font size
