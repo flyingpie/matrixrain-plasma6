@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import Qt5Compat.GraphicalEffects
 import org.kde.plasma.plasmoid 2.0
 
 WallpaperItem {
@@ -40,7 +41,7 @@ WallpaperItem {
             columnHeight = columnWidth / ratio
             rowCount = Math.floor(canvas.height / columnHeight)
 
-            maxDropSize = columnWidth * 2
+            maxDropSize = columnWidth * 1.5
             minDropSize = columnWidth * .5;
 
             for (var j = 0; j < columnCount; j++) {
@@ -78,11 +79,14 @@ WallpaperItem {
             onTriggered: canvas.requestPaint()
         }
 
+        property var init
+
         onPaint: {
             var ctx = getContext("2d")
+
             ctx.globalAlpha = 1.0
 
-            ctx.fillStyle = "rgba(0,0,0,0.04)"
+            ctx.fillStyle = "rgba(0,0,0,0.05)"
             ctx.fillRect(0,0,width,height)
 
             for (var i = 0; i < drops.length; i++) {
@@ -117,4 +121,26 @@ WallpaperItem {
     onFpsChanged: timer.interval = 1000 / main.fps;
     onGlitchChanceChanged: canvas.reset();
     onSingleColorChanged: canvas.reset();
+
+    FastBlur {
+        id: blur
+        anchors.fill: canvas
+        source: canvas
+        radius: 10
+    }
+
+    Blend {
+        id: blend
+        anchors.fill: blur
+        source: blur
+        foregroundSource: canvas
+        mode: "addition"
+    }
+
+    BrightnessContrast {
+        anchors.fill: blend
+        source: blend
+        brightness: 0.15
+        contrast: 0.15
+    }
 }
