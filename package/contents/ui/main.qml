@@ -5,72 +5,116 @@ WallpaperItem {
     id: main
     anchors.fill: parent
 
-    property int fontSize: main.configuration.fontSize !== undefined ? main.configuration.fontSize : 16
-    property int speed: main.configuration.speed !== undefined ? main.configuration.speed : 50
-    property int colorMode: main.configuration.colorMode !== undefined ? main.configuration.colorMode : 0
-    property color singleColor: main.configuration.singleColor !== undefined ? main.configuration.singleColor : "#00ff00"
-    property int paletteIndex: main.configuration.paletteIndex !== undefined ? main.configuration.paletteIndex : 0
-    property real jitter: main.configuration.jitter !== undefined ? main.configuration.jitter : 0
-    property int glitchChance: main.configuration.glitchChance !== undefined ? main.configuration.glitchChance : 1
+    property int fps: main.configuration.fps !== undefined ? main.configuration.fps : 60
 
-    property var palettes: [
-        ["#00ff00","#ff00ff","#00ffff","#ff0000","#ffff00","#0000ff"],
-        ["#ff0066","#33ff99","#ffcc00","#6600ff","#00ccff","#ff3300"],
-        ["#ff00ff","#00ffcc","#cc00ff","#ffcc33","#33ccff","#ccff00"]
-    ]
+    property int columnCount: main.configuration.columnCount !== undefined ? main.configuration.columnCount : 80
+
+    // Drop Speed
+    property real dropSpeedMin: main.configuration.dropSpeedMin !== undefined ? main.configuration.dropSpeedMin : 5
+    property real dropSpeedMax: main.configuration.dropSpeedMax !== undefined ? main.configuration.dropSpeedMax : 25
+
+    property color singleColor: main.configuration.singleColor !== undefined ? main.configuration.singleColor : "#00ff00"
+
+    property int glitchChance: main.configuration.glitchChance !== undefined ? main.configuration.glitchChance : 1
 
     Canvas {
         id: canvas
         anchors.fill: parent
+
+        property var columnWidth
+        property var columnWidthHalf
+        property var columnHeight
+        property var rowCount
+        property var ratio
+        property var maxDropSize
+        property var minDropSize
         property var drops: []
 
         function initDrops() {
             drops = []
-            var cols = Math.floor(canvas.width / main.fontSize)
-            for (var j = 0; j < cols; j++) {
-                drops.push(Math.floor(Math.random() * canvas.height / main.fontSize))
+
+            ratio = canvas.width / canvas.height
+
+            columnWidth = Math.floor(canvas.width / columnCount)
+            columnWidthHalf = columnWidth / 2
+            columnHeight = columnWidth / ratio
+            rowCount = Math.floor(canvas.height / columnHeight)
+
+            maxDropSize = columnWidth * 2
+            minDropSize = columnWidth * .5;
+
+            for (var j = 0; j < columnCount; j++) {
+                let drop = createDrop(j)
+                drop.y = Math.floor(Math.random() * canvas.height) // Start drops across the screen
+                drops.push(drop)
+            }
+        }
+
+        function reset() {
+            canvas.initDrops();
+            canvas.requestPaint();
+        }
+
+        function randomIntBetween(min, max) {
+            return Math.floor(min + Math.random() * (max - min))
+        }
+
+        function createDrop(j) {
+            return {
+                x:                j * columnWidth,
+                y:                0,
+                x_offset:        randomIntBetween(-columnWidthHalf, columnWidthHalf),
+                brightness:        .5 + Math.random() * .9,
+                size:            minDropSize + Math.random() * (maxDropSize - minDropSize),
+                speed:            randomIntBetween(main.dropSpeedMin, main.dropSpeedMax)
             }
         }
 
         Timer {
             id: timer
-            interval: 1000 / main.speed
+            interval: 1000 / main.fps
             running: true
             repeat: true
             onTriggered: canvas.requestPaint()
         }
 
         onPaint: {
-            var ctx = getContext("2d"), w = width, h = height
-            ctx.fillStyle = "rgba(0,0,0,0.05)"
-            ctx.fillRect(0,0,w,h)
+            var ctx = getContext("2d")
+            ctx.globalAlpha = 1.0
+
+            ctx.fillStyle = "rgba(0,0,0,0.04)"
+            ctx.fillRect(0,0,width,height)
+
             for (var i = 0; i < drops.length; i++) {
-                var x = i * main.fontSize
-                var y = drops[i] * main.fontSize
-                var color = main.colorMode === 0
-                    ? main.singleColor
-                    : main.palettes[main.paletteIndex][i % main.palettes[main.paletteIndex].length]
-                // glitch chance percent
+                var drop = drops[i];
+
+                // Glitch
                 if (Math.random() < main.glitchChance / 100) {
                     ctx.fillStyle = "#ffffff"
+                    ctx.font = `bold ${drop.size}px monospace`
                 } else {
-                    ctx.fillStyle = color
+                    ctx.fillStyle = main.singleColor
+                    ctx.globalAlpha = drop.brightness
                 }
-                ctx.font = main.fontSize + "px monospace"
-                ctx.fillText(String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96)), x, y)
-                // advance with jitter
-                drops[i] = (drops[i] + 1 + Math.random() * main.jitter) % (h / main.fontSize)
+                ctx.font = drop.size + "px monospace"
+                ctx.fillText(String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96)), drop.x + drop.x_offset, drop.y)
+
+                drop.y += drop.speed
+
+                // Reset drop after clearing the screen
+                if (drop.y > height) {
+                    drops[i] = createDrop(i)
+                }
             }
         }
 
         Component.onCompleted: initDrops()
     }
 
-    onFontSizeChanged: { canvas.initDrops(); canvas.requestPaint(); }
-    onSpeedChanged: timer.interval = 1000 / main.speed;
-    onColorModeChanged: canvas.requestPaint();
-    onSingleColorChanged: canvas.requestPaint();
-    onPaletteIndexChanged: canvas.requestPaint();
-    onJitterChanged: canvas.requestPaint();
-    onGlitchChanceChanged: canvas.requestPaint();
+    onColumnCountChanged: canvas.reset();
+    onDropSpeedMaxChanged: canvas.reset();
+    onDropSpeedMinChanged: canvas.reset();
+    onFpsChanged: timer.interval = 1000 / main.fps;
+    onGlitchChanceChanged: canvas.reset();
+    onSingleColorChanged: canvas.reset();
 }
