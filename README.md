@@ -2,7 +2,7 @@
 
 Provides a Matrix-esque "code rainfall" background wallpaper for Plasma 6, with some fun custommizations.
 
-![screenshot.png](screenshot.png)
+[Screencast_20250625_223750.webm](https://github.com/user-attachments/assets/98bb4259-8ba0-4a2f-92a9-abcae95f43da)
 
 ## Features
 
